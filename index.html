@@ -12,23 +12,16 @@
       background-color: #0f172a;
       color: white;
       overflow-x: hidden;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
     canvas {
       position: fixed;
       top: 0;
       left: 0;
       z-index: -1;
-    }
-    .fallback-img {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background-color: #1e293b;
-      color: #94a3b8;
-      font-size: 14px;
-      font-weight: bold;
     }
     .fade-in {
       animation: fadeIn 1s ease-in;
@@ -37,268 +30,124 @@
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
     }
-
-    /* Tela de login */
-    #login-screen {
-      position: fixed;
-      inset: 0;
-      background: #0f172a;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 50;
-    }
-
-    #login-box {
-      background: #1e293b;
-      padding: 2rem 2.5rem;
-      border-radius: 1rem;
-      box-shadow: 0 0 20px #6366f1aa;
-      width: 320px;
-    }
-
-    #login-box h2 {
-      font-size: 1.5rem;
-      font-weight: 600;
-      margin-bottom: 1.5rem;
-      color: #a5b4fc;
-      text-align: center;
-    }
-
-    #login-box input {
-      width: 100%;
-      padding: 0.75rem 1rem;
-      margin-bottom: 1rem;
-      border-radius: 0.5rem;
-      border: none;
-      outline: none;
-      font-size: 1rem;
-    }
-
-    #login-box button {
-      width: 100%;
-      padding: 0.75rem 1rem;
-      background: #6366f1;
-      color: white;
-      font-weight: 600;
-      border-radius: 0.5rem;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-
-    #login-box button:hover {
-      background: #4f46e5;
-    }
-
-    #login-error {
-      color: #f87171;
-      font-weight: 600;
-      text-align: center;
-      margin-top: 0.5rem;
-      display: none;
-    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-  <!-- Tela de Login -->
-  <div id="login-screen">
-    <div id="login-box">
-      <h2>Login na LCT TV</h2>
-      <input type="text" id="username" placeholder="Usuário" autocomplete="username" />
-      <input type="password" id="password" placeholder="Senha" autocomplete="current-password" />
-      <button id="login-btn">Entrar</button>
-      <p id="login-error">Usuário ou senha incorretos</p>
+  <!-- Partículas para todo fundo -->
+  <canvas id="webCanvas"></canvas>
+
+  <!-- TELA DE LOGIN -->
+  <div id="login-screen" class="fixed inset-0 bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex flex-col justify-center items-center px-6">
+    <div class="bg-gray-900/80 backdrop-blur-md rounded-3xl shadow-2xl max-w-md w-full p-10 border border-indigo-600">
+      <h2 class="text-4xl font-extrabold mb-8 text-center text-yellow-300 drop-shadow-lg">🔐 Login LCT TV</h2>
+      <form id="login-form" class="flex flex-col gap-6">
+        <input
+          type="text"
+          id="username"
+          placeholder="Usuário"
+          class="px-4 py-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+          required
+          autocomplete="username"
+        />
+        <input
+          type="password"
+          id="password"
+          placeholder="Senha"
+          class="px-4 py-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+          required
+          autocomplete="current-password"
+        />
+        <button
+          type="submit"
+          class="bg-yellow-400 text-gray-900 font-bold py-3 rounded-lg shadow-lg hover:bg-yellow-500 transition-colors"
+        >
+          Entrar
+        </button>
+        <p id="login-error" class="text-red-500 text-center mt-2 hidden font-semibold"></p>
+      </form>
     </div>
   </div>
 
-  <!-- Partículas -->
-  <canvas id="webCanvas"></canvas>
+  <!-- APP PRINCIPAL (escondido até login) -->
+  <div id="app" class="min-h-screen flex flex-col hidden">
 
-  <!-- Cabeçalho -->
-  <header class="p-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 shadow-xl flex justify-between items-center hidden" id="header">
-    <h1 class="text-3xl font-extrabold text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
-      📺 LCT <span class="text-yellow-300 animate-pulse">TV</span>
-    </h1>
-    <input id="search-input" type="text" placeholder="🔍 Buscar canal..."
-      class="px-4 py-2 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-400 shadow-inner" />
-  </header>
+    <!-- Cabeçalho -->
+    <header
+      class="p-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 shadow-xl flex justify-between items-center"
+    >
+      <h1
+        class="text-3xl font-extrabold text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]"
+      >
+        📺 LCT <span class="text-yellow-300 animate-pulse">TV</span>
+      </h1>
+      <input
+        id="search-input"
+        type="text"
+        placeholder="🔍 Buscar canal..."
+        class="px-4 py-2 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-400 shadow-inner"
+      />
+    </header>
 
-  <!-- Conteúdo Principal -->
-  <main class="flex-1 flex flex-col gap-4 p-4 hidden" id="main-content">
-    <section id="player-container"
-      class="relative aspect-video max-w-5xl mx-auto mt-4 bg-black rounded-xl shadow-2xl border-4 border-indigo-500/60 overflow-hidden transition-all duration-500">
-      <iframe id="video-player" class="w-full h-full" src="" allowfullscreen frameborder="0"></iframe>
-      <button id="fullscreen-btn"
-        class="absolute top-3 right-3 p-2 bg-indigo-700/80 hover:bg-indigo-600 text-white rounded-md shadow-md transition-transform hover:scale-110">
-        ⛶ Tela Cheia
-      </button>
-    </section>
+    <!-- Conteúdo Principal -->
+    <main class="flex-1 flex flex-col gap-4 p-4">
+      <section
+        id="player-container"
+        class="relative aspect-video max-w-5xl mx-auto mt-4 bg-black rounded-xl shadow-2xl border-4 border-indigo-500/60 overflow-hidden transition-all duration-500"
+      >
+        <iframe
+          id="video-player"
+          class="w-full h-full"
+          src=""
+          allowfullscreen
+          frameborder="0"
+        ></iframe>
+        <button
+          id="fullscreen-btn"
+          class="absolute top-3 right-3 p-2 bg-indigo-700/80 hover:bg-indigo-600 text-white rounded-md shadow-md transition-transform hover:scale-110"
+        >
+          ⛶ Tela Cheia
+        </button>
+      </section>
 
-    <p id="channel-title"
-      class="text-center text-xl mt-4 text-white font-semibold tracking-wide transition-all duration-300">
-      Carregando canal...
-    </p>
+      <p
+        id="channel-title"
+        class="text-center text-xl mt-4 text-white font-semibold tracking-wide transition-all duration-300"
+      >
+        Carregando canal...
+      </p>
 
-    <div id="loading-indicator"
-      class="text-center text-gray-400 font-medium mt-2 animate-pulse">🔄 Carregando canais...</div>
+      <div
+        id="loading-indicator"
+        class="text-center text-gray-400 font-medium mt-2 animate-pulse"
+      >
+        🔄 Carregando canais...
+      </div>
 
-    <div id="no-results" class="hidden text-center text-red-500 font-bold mt-2">Nenhum canal encontrado.</div>
+      <div
+        id="no-results"
+        class="hidden text-center text-red-500 font-bold mt-2"
+      >
+        Nenhum canal encontrado.
+      </div>
 
-    <div id="channel-grid"
-      class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 fade-in p-2">
-    </div>
-  </main>
+      <div
+        id="channel-grid"
+        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 fade-in p-2"
+      ></div>
+    </main>
 
-  <!-- Rodapé -->
-  <footer class="p-4 text-center text-sm text-gray-300 bg-gray-900 border-t border-gray-700 mt-auto hidden" id="footer">
-    LCT TV © 2025 — Todos os direitos reservados
-  </footer>
+    <!-- Rodapé -->
+    <footer
+      class="p-4 text-center text-sm text-gray-300 bg-gray-900 border-t border-gray-700 mt-auto"
+    >
+      LCT TV © 2025 — Todos os direitos reservados
+    </footer>
+  </div>
 
   <!-- JavaScript principal -->
   <script>
-    // Login simples - usuário e senha fixos para exemplo
-    const loginScreen = document.getElementById('login-screen');
-    const loginBtn = document.getElementById('login-btn');
-    const usernameInput = document.getElementById('username');
-    const passwordInput = document.getElementById('password');
-    const loginError = document.getElementById('login-error');
-
-    const header = document.getElementById('header');
-    const mainContent = document.getElementById('main-content');
-    const footer = document.getElementById('footer');
-
-    const VALID_USER = "admin";
-    const VALID_PASS = "1234";
-
-    loginBtn.addEventListener('click', () => {
-      const username = usernameInput.value.trim();
-      const password = passwordInput.value.trim();
-
-      if (username === VALID_USER && password === VALID_PASS) {
-        loginError.style.display = 'none';
-        loginScreen.style.display = 'none';
-        header.classList.remove('hidden');
-        mainContent.classList.remove('hidden');
-        footer.classList.remove('hidden');
-        loadChannels();  // Só carrega canais após login
-      } else {
-        loginError.style.display = 'block';
-      }
-    });
-
-    // Permite entrar ao apertar Enter
-    [usernameInput, passwordInput].forEach(input => {
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') loginBtn.click();
-      });
-    });
-
-    // Funções e variáveis do player e canais
-
-    const playerContainer = document.getElementById('player-container');
-    const videoPlayer = document.getElementById('video-player');
-    const channelTitle = document.getElementById('channel-title');
-    const channelGrid = document.getElementById('channel-grid');
-    const searchInput = document.getElementById('search-input');
-    const loadingIndicator = document.getElementById('loading-indicator');
-    const noResultsMessage = document.getElementById('no-results');
-    const fullscreenBtn = document.getElementById('fullscreen-btn');
-
-    const API_URL = 'https://api-flixy-canais.vercel.app/all';
-    let allChannels = [];
-
-    function handleImageError(element, channelName) {
-      const fallback = document.createElement('div');
-      fallback.className = 'fallback-img';
-      fallback.textContent = channelName;
-      element.parentNode.replaceChild(fallback, element);
-    }
-
-    function playChannel(url, name) {
-      videoPlayer.src = url;
-      channelTitle.innerHTML = `Assistindo agora: <span class="text-indigo-400 font-bold">${name}</span>`;
-      playerContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-
-    async function loadChannels() {
-      loadingIndicator.classList.remove('hidden');
-      try {
-        const response = await fetch(API_URL);
-        if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
-        const channels = await response.json();
-        allChannels = channels;
-        displayChannels(allChannels);
-        if (allChannels.length > 0) {
-          playChannel(allChannels[0].player_url, allChannels[0].nome);
-        }
-      } catch (error) {
-        console.error("Erro ao carregar canais:", error);
-        channelGrid.innerHTML = `<p class="text-red-500 col-span-full text-center">Erro ao carregar os canais. Tente novamente mais tarde.</p>`;
-      } finally {
-        loadingIndicator.classList.add('hidden');
-        channelGrid.classList.add('fade-in');
-      }
-    }
-
-    function displayChannels(channels) {
-      channelGrid.innerHTML = '';
-      noResultsMessage.classList.toggle('hidden', channels.length > 0);
-
-      channels.forEach(channel => {
-        const card = document.createElement('div');
-        card.className = 'channel-card cursor-pointer bg-gray-900 rounded-xl overflow-hidden hover:ring-2 hover:ring-pink-500 transition-all shadow-lg hover:shadow-pink-500/30';
-        card.addEventListener('click', () => playChannel(channel.player_url, channel.nome));
-
-        const imageContainer = document.createElement('div');
-        imageContainer.className = 'aspect-w-4 aspect-h-3 bg-gray-800';
-
-        const img = document.createElement('img');
-        img.src = channel.capa;
-        img.alt = channel.nome;
-        img.className = 'w-full h-full object-contain p-3';
-        img.loading = 'lazy';
-        img.onerror = () => handleImageError(img, channel.nome);
-
-        imageContainer.appendChild(img);
-
-        const nameContainer = document.createElement('div');
-        nameContainer.className = 'p-2 text-center bg-gray-800';
-
-        const name = document.createElement('p');
-        name.className = 'font-semibold text-sm text-gray-200 truncate';
-        name.textContent = channel.nome;
-
-        nameContainer.appendChild(name);
-        card.appendChild(imageContainer);
-        card.appendChild(nameContainer);
-        channelGrid.appendChild(card);
-      });
-    }
-
-    function filterChannels() {
-      const query = searchInput.value.toLowerCase().trim();
-      const filtered = allChannels.filter(c => c.nome.toLowerCase().includes(query));
-      displayChannels(filtered);
-    }
-
-    function toggleFullscreen() {
-      if (!document.fullscreenElement) {
-        playerContainer.requestFullscreen().catch(err => {
-          alert(`Erro ao ativar tela cheia: ${err.message}`);
-        });
-      } else {
-        document.exitFullscreen();
-      }
-    }
-
-    searchInput.addEventListener('input', filterChannels);
-    fullscreenBtn.addEventListener('click', toggleFullscreen);
-
-  </script>
-
-  <!-- Partículas -->
-  <script>
+    // Partículas no canvas (mesmo código do original)
     const canvas = document.getElementById('webCanvas');
     const ctx = canvas.getContext('2d');
 
@@ -364,6 +213,150 @@
 
     createPoints(90);
     drawWeb();
+
+    // Login simples (exemplo com usuário e senha fixos)
+    const loginScreen = document.getElementById('login-screen');
+    const app = document.getElementById('app');
+    const loginForm = document.getElementById('login-form');
+    const loginError = document.getElementById('login-error');
+
+    // Usuário e senha fixos para exemplo
+    const VALID_USERNAME = 'user';
+    const VALID_PASSWORD = '1234';
+
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+
+      if (username === VALID_USERNAME && password === VALID_PASSWORD) {
+        // Login OK: esconder tela login, mostrar app
+        loginError.classList.add('hidden');
+        loginScreen.style.display = 'none';
+        app.classList.remove('hidden');
+      } else {
+        loginError.textContent = 'Usuário ou senha inválidos.';
+        loginError.classList.remove('hidden');
+      }
+    });
+
+    // Código do app original abaixo...
+
+    const playerContainer = document.getElementById('player-container');
+    const videoPlayer = document.getElementById('video-player');
+    const channelTitle = document.getElementById('channel-title');
+    const channelGrid = document.getElementById('channel-grid');
+    const searchInput = document.getElementById('search-input');
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const noResultsMessage = document.getElementById('no-results');
+    const fullscreenBtn = document.getElementById('fullscreen-btn');
+
+    const API_URL = 'https://api-flixy-canais.vercel.app/all';
+    let allChannels = [];
+
+    function handleImageError(element, channelName) {
+      const fallback = document.createElement('div');
+      fallback.className = 'fallback-img';
+      fallback.textContent = channelName;
+      element.parentNode.replaceChild(fallback, element);
+    }
+
+    function playChannel(url, name) {
+      videoPlayer.src = url;
+      channelTitle.innerHTML = `Assistindo agora: <span class="text-indigo-400 font-bold">${name}</span>`;
+      playerContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    async function loadChannels() {
+      try {
+        const response = await fetch(API_URL);
+        if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
+        const channels = await response.json();
+        allChannels = channels;
+        displayChannels(allChannels);
+        if (allChannels.length > 0) {
+          playChannel(allChannels[0].player_url, allChannels[0].nome);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar canais:', error);
+        channelGrid.innerHTML = `<p class="text-red-500 col-span-full text-center">Erro ao carregar os canais. Tente novamente mais tarde.</p>`;
+      } finally {
+        loadingIndicator.classList.add('hidden');
+        channelGrid.classList.add('fade-in');
+      }
+    }
+
+    function displayChannels(channels) {
+      channelGrid.innerHTML = '';
+      noResultsMessage.classList.toggle('hidden', channels.length > 0);
+
+      channels.forEach((channel) => {
+        const card = document.createElement('div');
+        card.className =
+          'channel-card cursor-pointer bg-gray-900 rounded-xl overflow-hidden hover:ring-2 hover:ring-pink-500 transition-all shadow-lg hover:shadow-pink-500/30';
+        card.addEventListener('click', () => playChannel(channel.player_url, channel.nome));
+
+        const imageContainer = document.createElement('div');
+        imageContainer.className = 'aspect-w-4 aspect-h-3 bg-gray-800';
+
+        const img = document.createElement('img');
+        img.src = channel.capa;
+        img.alt = channel.nome;
+        img.className = 'w-full h-full object-contain p-3';
+        img.loading = 'lazy';
+        img.onerror = () => handleImageError(img, channel.nome);
+
+        imageContainer.appendChild(img);
+
+        const nameContainer = document.createElement('div');
+        nameContainer.className = 'p-2 text-center bg-gray-800';
+
+        const name = document.createElement('p');
+        name.className = 'font-semibold text-sm text-gray-200 truncate';
+        name.textContent = channel.nome;
+
+        nameContainer.appendChild(name);
+        card.appendChild(imageContainer);
+        card.appendChild(nameContainer);
+        channelGrid.appendChild(card);
+      });
+    }
+
+    function filterChannels() {
+      const query = searchInput.value.toLowerCase().trim();
+      const filtered = allChannels.filter((c) => c.nome.toLowerCase().includes(query));
+      displayChannels(filtered);
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        playerContainer.requestFullscreen().catch((err) => {
+          alert(`Erro ao ativar tela cheia: ${err.message}`);
+        });
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    searchInput.addEventListener('input', filterChannels);
+    fullscreenBtn.addEventListener('click', toggleFullscreen);
+    // Só carregar canais depois do login, para isso vamos mudar:
+    // loadChannels();
+  </script>
+
+  <script>
+    // Após login, carregar os canais:
+    // Exemplo: monitorar visibilidade do app
+    const observer = new MutationObserver(() => {
+      if (!document.getElementById('app').classList.contains('hidden')) {
+        // app visível, carregar canais
+        if (!window.channelsLoaded) {
+          window.channelsLoaded = true;
+          loadChannels();
+        }
+      }
+    });
+    observer.observe(document.getElementById('app'), { attributes: true, attributeFilter: ['class'] });
   </script>
 
 </body>
