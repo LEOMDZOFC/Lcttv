@@ -3,14 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LCTV - CANAIS AO VIVO</title>
+  <title>LCT TV - Canais Ao Vivo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
     body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #111;
-      color: #fff;
-      overflow: hidden;
+      font-family: 'Inter', sans-serif;
+      background-color: #0f172a;
+      color: white;
+      overflow-x: hidden;
     }
     canvas {
       position: fixed;
@@ -18,130 +19,155 @@
       left: 0;
       z-index: -1;
     }
-    header {
-      padding: 20px;
-      text-align: center;
-      background: #222;
-    }
-    input {
-      padding: 10px;
-      width: 80%;
-      max-width: 400px;
-      font-size: 16px;
-      border: none;
-      border-radius: 5px;
-      margin-bottom: 20px;
-    }
-    .canal-lista {
+    .fallback-img {
+      width: 100%;
+      height: 100%;
       display: flex;
-      flex-wrap: wrap;
+      align-items: center;
       justify-content: center;
-      gap: 15px;
-      padding: 10px;
+      background-color: #1e293b;
+      color: #94a3b8;
+      font-size: 14px;
+      font-weight: bold;
     }
-    .canal {
-      background: #222;
-      border-radius: 10px;
-      padding: 10px;
-      cursor: pointer;
-      text-align: center;
-      width: 160px;
-      transition: transform 0.3s;
-      box-shadow: 0 0 10px #000;
+    .fade-in {
+      animation: fadeIn 1s ease-in;
     }
-    .canal:hover {
-      transform: scale(1.05);
-      background: #333;
-    }
-    .canal img {
-      width: 100%;
-      height: 100px;
-      object-fit: contain;
-      border-radius: 6px;
-      background: #fff;
-      margin-bottom: 8px;
-    }
-    .canal span {
-      display: block;
-      margin-top: 4px;
-      font-size: 15px;
-    }
-    iframe {
-      width: 100%;
-      height: 400px;
-      border: none;
-    }
-    .player {
-      margin: 20px auto;
-      max-width: 900px;
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col">
 
-  <!-- Canvas de partículas -->
+  <!-- Canvas das partículas -->
   <canvas id="webCanvas"></canvas>
 
-  <header>
-    <h1>EmbedCanais - TV Online</h1>
-    <input type="text" id="pesquisa" placeholder="Pesquisar canal..." oninput="buscarCanal()" />
+  <header class="p-4 bg-gray-900 shadow-lg flex justify-between items-center">
+    <h1 class="text-2xl font-bold text-indigo-400">📺 LCT TV</h1>
+    <input id="search-input" type="text" placeholder="🔍 Buscar canal..." class="px-3 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
   </header>
 
-  <div class="player" id="player">
-    <iframe id="iframe-player" src="https://api-flixy-canais.vercel.app/hlsplayer/espn" allowfullscreen></iframe>
-  </div>
+  <main class="flex-1 flex flex-col gap-4 p-4">
+    <section id="player-container" class="relative aspect-video max-w-5xl mx-auto bg-black rounded shadow overflow-hidden">
+      <iframe id="video-player" class="w-full h-full" src="" allowfullscreen frameborder="0"></iframe>
+      <button id="fullscreen-btn" class="absolute top-2 right-2 p-2 bg-gray-800/70 hover:bg-gray-700 rounded text-white text-sm">⛶ Tela Cheia</button>
+    </section>
 
-  <div class="canal-lista" id="lista-canais">
-    <!-- Canais dinâmicos -->
-  </div>
+    <p id="channel-title" class="text-center text-lg text-gray-300">Carregando canal...</p>
 
+    <div id="loading-indicator" class="text-center text-gray-400">🔄 Carregando canais...</div>
+    <div id="no-results" class="hidden text-center text-red-500">Nenhum canal encontrado.</div>
+
+    <div id="channel-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 fade-in"></div>
+  </main>
+
+  <footer class="p-4 text-center text-sm text-gray-500 bg-gray-900">LCT TV © 2025 - Todos os direitos reservados.</footer>
+
+  <!-- Script funcional do site -->
   <script>
-    const listaCanais = document.getElementById("lista-canais");
-    const iframe = document.getElementById("iframe-player");
+    const playerContainer = document.getElementById('player-container');
+    const videoPlayer = document.getElementById('video-player');
+    const channelTitle = document.getElementById('channel-title');
+    const channelGrid = document.getElementById('channel-grid');
+    const searchInput = document.getElementById('search-input');
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const noResultsMessage = document.getElementById('no-results');
+    const fullscreenBtn = document.getElementById('fullscreen-btn');
 
-    async function carregarCanais() {
-      const res = await fetch("https://api-flixy-canais.vercel.app/all");
-      const canais = await res.json();
-      mostrarCanais(canais);
+    const API_URL = 'https://api-flixy-canais.vercel.app/all';
+    let allChannels = [];
+
+    function handleImageError(element, channelName) {
+      const fallback = document.createElement('div');
+      fallback.className = 'fallback-img';
+      fallback.textContent = channelName;
+      element.parentNode.replaceChild(fallback, element);
     }
 
-    async function buscarCanal() {
-      const termo = document.getElementById("pesquisa").value.trim();
-      if (termo === "") {
-        carregarCanais();
-        return;
+    function playChannel(url, name) {
+      videoPlayer.src = url;
+      channelTitle.innerHTML = `Assistindo agora: <span class="text-indigo-400 font-bold">${name}</span>`;
+      playerContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    async function loadChannels() {
+      try {
+        const response = await fetch(API_URL);
+        if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
+        const channels = await response.json();
+        allChannels = channels;
+        displayChannels(allChannels);
+        if (allChannels.length > 0) {
+          playChannel(allChannels[0].player_url, allChannels[0].nome);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar canais:", error);
+        channelGrid.innerHTML = `<p class="text-red-500 col-span-full text-center">Erro ao carregar os canais. Tente novamente mais tarde.</p>`;
+      } finally {
+        loadingIndicator.classList.add('hidden');
+        channelGrid.classList.add('fade-in');
       }
-      const res = await fetch(`https://api-flixy-canais.vercel.app/search?nome=${encodeURIComponent(termo)}`);
-      const resultado = await res.json();
-      mostrarCanais(resultado);
     }
 
-    function mostrarCanais(canais) {
-      listaCanais.innerHTML = "";
-      canais.forEach(canal => {
-        const div = document.createElement("div");
-        div.className = "canal";
-        div.onclick = () => {
-          iframe.src = `https://api-flixy-canais.vercel.app/hlsplayer/${canal.slug}`;
-        };
+    function displayChannels(channels) {
+      channelGrid.innerHTML = '';
+      noResultsMessage.classList.toggle('hidden', channels.length > 0);
 
-        const img = document.createElement("img");
-        img.src = canal.imagem || "";
-        img.alt = canal.nome;
+      channels.forEach(channel => {
+        const card = document.createElement('div');
+        card.className = 'channel-card cursor-pointer bg-gray-900 rounded-lg overflow-hidden hover:ring-2 hover:ring-indigo-500 transition';
+        card.addEventListener('click', () => playChannel(channel.player_url, channel.nome));
 
-        const nome = document.createElement("span");
-        nome.textContent = canal.nome;
+        const imageContainer = document.createElement('div');
+        imageContainer.className = 'aspect-w-4 aspect-h-3 bg-gray-800';
 
-        div.appendChild(img);
-        div.appendChild(nome);
-        listaCanais.appendChild(div);
+        const img = document.createElement('img');
+        img.src = channel.capa;
+        img.alt = channel.nome;
+        img.className = 'w-full h-full object-contain p-3';
+        img.loading = 'lazy';
+        img.onerror = () => handleImageError(img, channel.nome);
+
+        imageContainer.appendChild(img);
+
+        const nameContainer = document.createElement('div');
+        nameContainer.className = 'p-2 text-center bg-gray-800';
+
+        const name = document.createElement('p');
+        name.className = 'font-semibold text-sm text-gray-200 truncate';
+        name.textContent = channel.nome;
+
+        nameContainer.appendChild(name);
+        card.appendChild(imageContainer);
+        card.appendChild(nameContainer);
+        channelGrid.appendChild(card);
       });
     }
 
-    carregarCanais();
+    function filterChannels() {
+      const query = searchInput.value.toLowerCase().trim();
+      const filtered = allChannels.filter(c => c.nome.toLowerCase().includes(query));
+      displayChannels(filtered);
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        playerContainer.requestFullscreen().catch(err => {
+          alert(`Erro ao ativar tela cheia: ${err.message}`);
+        });
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    searchInput.addEventListener('input', filterChannels);
+    fullscreenBtn.addEventListener('click', toggleFullscreen);
+    loadChannels();
   </script>
 
-  <!-- Script de partículas -->
+  <!-- Script das partículas -->
   <script>
     const canvas = document.getElementById('webCanvas');
     const ctx = canvas.getContext('2d');
@@ -209,6 +235,5 @@
     createPoints(90);
     drawWeb();
   </script>
-
 </body>
 </html>
