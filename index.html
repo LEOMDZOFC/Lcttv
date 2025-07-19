@@ -1,121 +1,200 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="h-full bg-gray-900 text-gray-300">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>LCT TV - TV Online Grátis</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LCT TV - Canais Ao Vivo</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
   <style>
-    /* Particles.js container full screen */
-    #particles-js {
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0f172a;
+      color: white;
+      overflow-x: hidden;
+    }
+    canvas {
       position: fixed;
+      top: 0;
+      left: 0;
+      z-index: -1;
+    }
+    .fallback-img {
       width: 100%;
       height: 100%;
-      top: 0; left: 0;
-      z-index: -1;
-      background: #111827; /* bg-gray-900 */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #1e293b;
+      color: #94a3b8;
+      font-size: 14px;
+      font-weight: bold;
     }
-    /* Fallback para imagem dos canais */
-    .fallback-img {
+    .fade-in {
+      animation: fadeIn 1s ease-in;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Tela de login */
+    #login-screen {
+      position: fixed;
+      inset: 0;
+      background: #0f172a;
       display: flex;
       justify-content: center;
       align-items: center;
-      background: #374151; /* bg-gray-700 */
-      color: #a5b4fc; /* indigo-300 */
-      font-weight: bold;
-      height: 100%;
-      font-size: 0.8rem;
-      padding: 0.25rem;
+      z-index: 50;
+    }
+
+    #login-box {
+      background: #1e293b;
+      padding: 2rem 2.5rem;
+      border-radius: 1rem;
+      box-shadow: 0 0 20px #6366f1aa;
+      width: 320px;
+    }
+
+    #login-box h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      color: #a5b4fc;
       text-align: center;
     }
-    /* Fade in animation */
-    .fade-in {
-      animation: fadeIn 0.5s ease forwards;
-    }
-    @keyframes fadeIn {
-      from {opacity: 0;}
-      to {opacity: 1;}
-    }
-    /* Aspect ratio helper */
-    .aspect-w-4 {
-      position: relative;
+
+    #login-box input {
       width: 100%;
-      padding-bottom: 75%; /* 4:3 ratio */
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+      border-radius: 0.5rem;
+      border: none;
+      outline: none;
+      font-size: 1rem;
     }
-    .aspect-w-4 > img,
-    .aspect-w-4 > div {
-      position: absolute;
-      top: 0; left: 0; width: 100%; height: 100%;
+
+    #login-box button {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: #6366f1;
+      color: white;
+      font-weight: 600;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    #login-box button:hover {
+      background: #4f46e5;
+    }
+
+    #login-error {
+      color: #f87171;
+      font-weight: 600;
+      text-align: center;
+      margin-top: 0.5rem;
+      display: none;
     }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-  <!-- Tela de Login com Partículas -->
-  <div id="login-screen" class="fixed inset-0 flex flex-col justify-center items-center bg-gray-900 text-indigo-400 z-50">
-    <div id="particles-js"></div>
-    <h1 class="text-5xl font-extrabold mb-8 drop-shadow-lg">📺 LCT TV</h1>
-    <button id="btn-start" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white font-semibold shadow-lg transition">Entrar</button>
+  <!-- Tela de Login -->
+  <div id="login-screen">
+    <div id="login-box">
+      <h2>Login na LCT TV</h2>
+      <input type="text" id="username" placeholder="Usuário" autocomplete="username" />
+      <input type="password" id="password" placeholder="Senha" autocomplete="current-password" />
+      <button id="login-btn">Entrar</button>
+      <p id="login-error">Usuário ou senha incorretos</p>
+    </div>
   </div>
 
-  <!-- Conteúdo Principal (escondido até login) -->
-  <div id="app" class="flex flex-col flex-1 min-h-screen hidden">
+  <!-- Partículas -->
+  <canvas id="webCanvas"></canvas>
 
-    <header class="p-4 bg-gray-900 shadow-lg flex justify-between items-center">
-      <h1 class="text-2xl font-bold text-indigo-400">📺 LCT TV</h1>
-      <input
-        id="search-input"
-        type="text"
-        placeholder="🔍 Buscar canal..."
-        class="px-3 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-      />
-    </header>
+  <!-- Cabeçalho -->
+  <header class="p-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 shadow-xl flex justify-between items-center hidden" id="header">
+    <h1 class="text-3xl font-extrabold text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
+      📺 LCT <span class="text-yellow-300 animate-pulse">TV</span>
+    </h1>
+    <input id="search-input" type="text" placeholder="🔍 Buscar canal..."
+      class="px-4 py-2 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-400 shadow-inner" />
+  </header>
 
-    <main class="flex-1 flex flex-col gap-4 p-4">
-      <section
-        id="player-container"
-        class="relative aspect-w-4 max-w-5xl mx-auto bg-black rounded shadow overflow-hidden"
-      >
-        <iframe
-          id="video-player"
-          class="w-full h-full"
-          src=""
-          allowfullscreen
-          frameborder="0"
-          allow="autoplay; fullscreen"
-        ></iframe>
-        <button
-          id="fullscreen-btn"
-          class="absolute top-2 right-2 p-2 bg-gray-800/70 hover:bg-gray-700 rounded text-white text-sm"
-          title="Tela Cheia"
-        >
-          ⛶
-        </button>
-      </section>
+  <!-- Conteúdo Principal -->
+  <main class="flex-1 flex flex-col gap-4 p-4 hidden" id="main-content">
+    <section id="player-container"
+      class="relative aspect-video max-w-5xl mx-auto mt-4 bg-black rounded-xl shadow-2xl border-4 border-indigo-500/60 overflow-hidden transition-all duration-500">
+      <iframe id="video-player" class="w-full h-full" src="" allowfullscreen frameborder="0"></iframe>
+      <button id="fullscreen-btn"
+        class="absolute top-3 right-3 p-2 bg-indigo-700/80 hover:bg-indigo-600 text-white rounded-md shadow-md transition-transform hover:scale-110">
+        ⛶ Tela Cheia
+      </button>
+    </section>
 
-      <p id="channel-title" class="text-center text-lg text-gray-300">Carregando canal...</p>
+    <p id="channel-title"
+      class="text-center text-xl mt-4 text-white font-semibold tracking-wide transition-all duration-300">
+      Carregando canal...
+    </p>
 
-      <div id="loading-indicator" class="text-center text-gray-400">🔄 Carregando canais...</div>
-      <div id="no-results" class="hidden text-center text-red-500">Nenhum canal encontrado.</div>
+    <div id="loading-indicator"
+      class="text-center text-gray-400 font-medium mt-2 animate-pulse">🔄 Carregando canais...</div>
 
-      <div
-        id="channel-grid"
-        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 fade-in"
-      ></div>
-    </main>
+    <div id="no-results" class="hidden text-center text-red-500 font-bold mt-2">Nenhum canal encontrado.</div>
 
-    <footer class="p-4 text-center text-sm text-gray-500 bg-gray-900">
-      LCT TV © 2025 - Todos os direitos reservados.
-    </footer>
-  </div>
+    <div id="channel-grid"
+      class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 fade-in p-2">
+    </div>
+  </main>
 
-  <!-- Particles.js library -->
-  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+  <!-- Rodapé -->
+  <footer class="p-4 text-center text-sm text-gray-300 bg-gray-900 border-t border-gray-700 mt-auto hidden" id="footer">
+    LCT TV © 2025 — Todos os direitos reservados
+  </footer>
 
+  <!-- JavaScript principal -->
   <script>
+    // Login simples - usuário e senha fixos para exemplo
     const loginScreen = document.getElementById('login-screen');
-    const btnStart = document.getElementById('btn-start');
-    const app = document.getElementById('app');
+    const loginBtn = document.getElementById('login-btn');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const loginError = document.getElementById('login-error');
+
+    const header = document.getElementById('header');
+    const mainContent = document.getElementById('main-content');
+    const footer = document.getElementById('footer');
+
+    const VALID_USER = "admin";
+    const VALID_PASS = "1234";
+
+    loginBtn.addEventListener('click', () => {
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value.trim();
+
+      if (username === VALID_USER && password === VALID_PASS) {
+        loginError.style.display = 'none';
+        loginScreen.style.display = 'none';
+        header.classList.remove('hidden');
+        mainContent.classList.remove('hidden');
+        footer.classList.remove('hidden');
+        loadChannels();  // Só carrega canais após login
+      } else {
+        loginError.style.display = 'block';
+      }
+    });
+
+    // Permite entrar ao apertar Enter
+    [usernameInput, passwordInput].forEach(input => {
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') loginBtn.click();
+      });
+    });
+
+    // Funções e variáveis do player e canais
 
     const playerContainer = document.getElementById('player-container');
     const videoPlayer = document.getElementById('video-player');
@@ -126,60 +205,8 @@
     const noResultsMessage = document.getElementById('no-results');
     const fullscreenBtn = document.getElementById('fullscreen-btn');
 
-    // API real do iptv-org (lista grande de canais)
-    const API_URL = 'https://iptv-org.github.io/api/iptv.json';
-
+    const API_URL = 'https://api-flixy-canais.vercel.app/all';
     let allChannels = [];
-
-    // Inicializa partículas na tela de login
-    particlesJS('particles-js', {
-      particles: {
-        number: { value: 60, density: { enable: true, value_area: 800 } },
-        color: { value: '#6366f1' },
-        shape: {
-          type: 'circle',
-          stroke: { width: 0, color: '#000' },
-        },
-        opacity: {
-          value: 0.5,
-          random: false,
-          anim: { enable: false },
-        },
-        size: {
-          value: 3,
-          random: true,
-          anim: { enable: false },
-        },
-        move: {
-          enable: true,
-          speed: 1,
-          direction: 'none',
-          random: false,
-          straight: false,
-          out_mode: 'out',
-        },
-      },
-      interactivity: {
-        detect_on: 'canvas',
-        events: {
-          onhover: { enable: true, mode: 'grab' },
-          onclick: { enable: true, mode: 'push' },
-          resize: true,
-        },
-        modes: {
-          grab: { distance: 140, line_linked: { opacity: 0.5 } },
-          push: { particles_nb: 4 },
-        },
-      },
-      retina_detect: true,
-    });
-
-    // Botão para esconder a tela de login e mostrar o app
-    btnStart.onclick = () => {
-      loginScreen.style.display = 'none';
-      app.classList.remove('hidden');
-      loadChannels();
-    };
 
     function handleImageError(element, channelName) {
       const fallback = document.createElement('div');
@@ -195,28 +222,19 @@
     }
 
     async function loadChannels() {
+      loadingIndicator.classList.remove('hidden');
       try {
-        loadingIndicator.classList.remove('hidden');
         const response = await fetch(API_URL);
         if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
         const channels = await response.json();
-
-        // Filtrar só canais do Brasil com URL válida
-        allChannels = channels.filter(
-          (ch) =>
-            ch.country === 'BR' &&
-            ch.url &&
-            (ch.url.startsWith('http') || ch.url.startsWith('rtmp') || ch.url.startsWith('udp'))
-        );
-
-        if (allChannels.length === 0) throw new Error('Nenhum canal válido encontrado.');
-
+        allChannels = channels;
         displayChannels(allChannels);
-        playChannel(allChannels[0].url, allChannels[0].name);
+        if (allChannels.length > 0) {
+          playChannel(allChannels[0].player_url, allChannels[0].nome);
+        }
       } catch (error) {
-        console.error('Erro ao carregar canais:', error);
-        channelGrid.innerHTML =
-          '<p class="text-red-500 col-span-full text-center">Erro ao carregar os canais. Tente novamente mais tarde.</p>';
+        console.error("Erro ao carregar canais:", error);
+        channelGrid.innerHTML = `<p class="text-red-500 col-span-full text-center">Erro ao carregar os canais. Tente novamente mais tarde.</p>`;
       } finally {
         loadingIndicator.classList.add('hidden');
         channelGrid.classList.add('fade-in');
@@ -227,21 +245,20 @@
       channelGrid.innerHTML = '';
       noResultsMessage.classList.toggle('hidden', channels.length > 0);
 
-      channels.forEach((channel) => {
+      channels.forEach(channel => {
         const card = document.createElement('div');
-        card.className =
-          'channel-card cursor-pointer bg-gray-900 rounded-lg overflow-hidden hover:ring-2 hover:ring-indigo-500 transition';
-        card.addEventListener('click', () => playChannel(channel.url, channel.name));
+        card.className = 'channel-card cursor-pointer bg-gray-900 rounded-xl overflow-hidden hover:ring-2 hover:ring-pink-500 transition-all shadow-lg hover:shadow-pink-500/30';
+        card.addEventListener('click', () => playChannel(channel.player_url, channel.nome));
 
         const imageContainer = document.createElement('div');
-        imageContainer.className = 'aspect-w-4 bg-gray-800';
+        imageContainer.className = 'aspect-w-4 aspect-h-3 bg-gray-800';
 
         const img = document.createElement('img');
-        img.src = channel.logo || `https://www.google.com/s2/favicons?domain=${extractDomain(channel.url)}`;
-        img.alt = channel.name;
+        img.src = channel.capa;
+        img.alt = channel.nome;
         img.className = 'w-full h-full object-contain p-3';
         img.loading = 'lazy';
-        img.onerror = () => handleImageError(img, channel.name);
+        img.onerror = () => handleImageError(img, channel.nome);
 
         imageContainer.appendChild(img);
 
@@ -250,7 +267,7 @@
 
         const name = document.createElement('p');
         name.className = 'font-semibold text-sm text-gray-200 truncate';
-        name.textContent = channel.name;
+        name.textContent = channel.nome;
 
         nameContainer.appendChild(name);
         card.appendChild(imageContainer);
@@ -259,30 +276,15 @@
       });
     }
 
-    function extractDomain(url) {
-      try {
-        return new URL(url).hostname;
-      } catch {
-        return '';
-      }
-    }
-
     function filterChannels() {
       const query = searchInput.value.toLowerCase().trim();
-      const filtered = allChannels.filter((c) => c.name.toLowerCase().includes(query));
+      const filtered = allChannels.filter(c => c.nome.toLowerCase().includes(query));
       displayChannels(filtered);
-      if (filtered.length > 0) {
-        playChannel(filtered[0].url, filtered[0].name);
-      } else {
-        videoPlayer.src = '';
-        channelTitle.textContent = '';
-        noResultsMessage.classList.remove('hidden');
-      }
     }
 
     function toggleFullscreen() {
       if (!document.fullscreenElement) {
-        playerContainer.requestFullscreen().catch((err) => {
+        playerContainer.requestFullscreen().catch(err => {
           alert(`Erro ao ativar tela cheia: ${err.message}`);
         });
       } else {
@@ -292,6 +294,77 @@
 
     searchInput.addEventListener('input', filterChannels);
     fullscreenBtn.addEventListener('click', toggleFullscreen);
+
   </script>
+
+  <!-- Partículas -->
+  <script>
+    const canvas = document.getElementById('webCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let width, height;
+    let points = [];
+
+    function resizeCanvas() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function createPoints(count) {
+      points = [];
+      for (let i = 0; i < count; i++) {
+        points.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          vx: (Math.random() - 0.5) * 0.7,
+          vy: (Math.random() - 0.5) * 0.7
+        });
+      }
+    }
+
+    function drawWeb() {
+      ctx.clearRect(0, 0, width, height);
+
+      for (let p of points) {
+        p.x += p.vx;
+        p.y += p.vy;
+
+        if (p.x < 0 || p.x > width) p.vx *= -1;
+        if (p.y < 0 || p.y > height) p.vy *= -1;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 1.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#00ffff';
+        ctx.fill();
+      }
+
+      for (let i = 0; i < points.length; i++) {
+        for (let j = i + 1; j < points.length; j++) {
+          const dx = points[i].x - points[j].x;
+          const dy = points[i].y - points[j].y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          if (distance < 120) {
+            ctx.beginPath();
+            ctx.moveTo(points[i].x, points[i].y);
+            ctx.lineTo(points[j].x, points[j].y);
+            const alpha = 1 - distance / 120;
+            ctx.strokeStyle = `rgba(0, 255, 255, ${alpha * 0.3})`;
+            ctx.lineWidth = 0.7;
+            ctx.stroke();
+          }
+        }
+      }
+
+      requestAnimationFrame(drawWeb);
+    }
+
+    createPoints(90);
+    drawWeb();
+  </script>
+
 </body>
 </html>
