@@ -1,363 +1,196 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" >
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LCT TV - Canais Ao Vivo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LCT TV - CANAIS AO VIVO</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
   <style>
-    body {
+    body, html {
+      margin: 0; padding: 0; height: 100%;
       font-family: 'Inter', sans-serif;
-      background-color: #0f172a;
-      color: white;
-      overflow-x: hidden;
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
+      background-color: #000; /* fundo preto */
+      overflow: hidden;
     }
-    canvas {
+    #webCanvas {
       position: fixed;
-      top: 0;
-      left: 0;
-      z-index: -1;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      background: transparent;
     }
-    .fade-in {
-      animation: fadeIn 1s ease-in;
+    #login-screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: rgba(0,0,0,0.7); /* fundo preto semi-transparente */
+      z-index: 10;
+      padding: 1rem;
     }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+    .login-box {
+      background-color: rgba(30,30,30,0.9);
+      border-radius: 1rem;
+      padding: 2rem;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 0 20px rgba(0,255,255,0.3);
+      border: 2px solid #00ffff;
+    }
+    .login-box h2 {
+      color: #00ffff;
+      font-weight: 700;
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
+      text-align: center;
+      text-shadow: 0 0 8px #00ffff;
+    }
+    input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1.25rem;
+      border: none;
+      border-radius: 0.75rem;
+      font-size: 1rem;
+      color: #00ffff;
+      background-color: rgba(0,0,0,0.7);
+      box-shadow: 0 0 5px #00ffff inset;
+      outline: none;
+      transition: box-shadow 0.3s ease;
+    }
+    input:focus {
+      box-shadow: 0 0 12px #00ffff;
+      background-color: rgba(0,0,0,0.9);
+    }
+    button {
+      width: 100%;
+      background-color: #00ffff;
+      color: #000;
+      font-weight: 700;
+      padding: 0.75rem;
+      border-radius: 0.75rem;
+      font-size: 1.1rem;
+      cursor: pointer;
+      box-shadow: 0 0 10px #00ffff;
+      transition: background-color 0.3s ease;
+      border: none;
+    }
+    button:hover {
+      background-color: #00cccc;
+      box-shadow: 0 0 14px #00cccc;
+    }
+    #login-error {
+      color: #ff5555;
+      text-align: center;
+      margin-top: 0.5rem;
+      font-weight: 600;
+      display: none;
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body>
 
-  <!-- Partículas para todo fundo -->
+  <!-- Canvas das partículas -->
   <canvas id="webCanvas"></canvas>
 
-  <!-- TELA DE LOGIN -->
-  <div id="login-screen" class="fixed inset-0 bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex flex-col justify-center items-center px-6">
-    <div class="bg-gray-900/80 backdrop-blur-md rounded-3xl shadow-2xl max-w-md w-full p-10 border border-indigo-600">
-      <h2 class="text-4xl font-extrabold mb-8 text-center text-yellow-300 drop-shadow-lg">🔐 Login LCT TV</h2>
-      <form id="login-form" class="flex flex-col gap-6">
-        <input
-          type="text"
-          id="username"
-          placeholder="Usuário"
-          class="px-4 py-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-          required
-          autocomplete="username"
-        />
-        <input
-          type="password"
-          id="password"
-          placeholder="Senha"
-          class="px-4 py-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-          required
-          autocomplete="current-password"
-        />
-        <button
-          type="submit"
-          class="bg-yellow-400 text-gray-900 font-bold py-3 rounded-lg shadow-lg hover:bg-yellow-500 transition-colors"
-        >
-          Entrar
-        </button>
-        <p id="login-error" class="text-red-500 text-center mt-2 hidden font-semibold"></p>
+  <!-- Tela de login -->
+  <div id="login-screen">
+    <div class="login-box" role="main" aria-label="Tela de Login">
+      <h2>🔐 Login LCT TV</h2>
+      <form id="login-form" autocomplete="off" aria-describedby="login-error" novalidate>
+        <input type="text" id="username" placeholder="Usuário" required autocomplete="username" aria-required="true" />
+        <input type="password" id="password" placeholder="Senha" required autocomplete="current-password" aria-required="true" />
+        <button type="submit" aria-label="Entrar">Entrar</button>
+        <p id="login-error" role="alert" aria-live="assertive">Usuário ou senha inválidos.</p>
       </form>
     </div>
   </div>
 
-  <!-- APP PRINCIPAL (escondido até login) -->
-  <div id="app" class="min-h-screen flex flex-col hidden">
-
-    <!-- Cabeçalho -->
-    <header
-      class="p-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 shadow-xl flex justify-between items-center"
-    >
-      <h1
-        class="text-3xl font-extrabold text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]"
-      >
-        📺 LCT <span class="text-yellow-300 animate-pulse">TV</span>
-      </h1>
-      <input
-        id="search-input"
-        type="text"
-        placeholder="🔍 Buscar canal..."
-        class="px-4 py-2 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-400 shadow-inner"
-      />
-    </header>
-
-    <!-- Conteúdo Principal -->
-    <main class="flex-1 flex flex-col gap-4 p-4">
-      <section
-        id="player-container"
-        class="relative aspect-video max-w-5xl mx-auto mt-4 bg-black rounded-xl shadow-2xl border-4 border-indigo-500/60 overflow-hidden transition-all duration-500"
-      >
-        <iframe
-          id="video-player"
-          class="w-full h-full"
-          src=""
-          allowfullscreen
-          frameborder="0"
-        ></iframe>
-        <button
-          id="fullscreen-btn"
-          class="absolute top-3 right-3 p-2 bg-indigo-700/80 hover:bg-indigo-600 text-white rounded-md shadow-md transition-transform hover:scale-110"
-        >
-          ⛶ Tela Cheia
-        </button>
-      </section>
-
-      <p
-        id="channel-title"
-        class="text-center text-xl mt-4 text-white font-semibold tracking-wide transition-all duration-300"
-      >
-        Carregando canal...
-      </p>
-
-      <div
-        id="loading-indicator"
-        class="text-center text-gray-400 font-medium mt-2 animate-pulse"
-      >
-        🔄 Carregando canais...
-      </div>
-
-      <div
-        id="no-results"
-        class="hidden text-center text-red-500 font-bold mt-2"
-      >
-        Nenhum canal encontrado.
-      </div>
-
-      <div
-        id="channel-grid"
-        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 fade-in p-2"
-      ></div>
-    </main>
-
-    <!-- Rodapé -->
-    <footer
-      class="p-4 text-center text-sm text-gray-300 bg-gray-900 border-t border-gray-700 mt-auto"
-    >
-      LCT TV © 2025 — Todos os direitos reservados
-    </footer>
-  </div>
-
-  <!-- JavaScript principal -->
   <script>
-    // Partículas no canvas (mesmo código do original)
+    // Partículas - canvas full screen com partículas azuis neon
     const canvas = document.getElementById('webCanvas');
     const ctx = canvas.getContext('2d');
-
-    let width, height;
+    let W, H;
     let points = [];
 
-    function resizeCanvas() {
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
+    function resize() {
+      W = canvas.width = window.innerWidth;
+      H = canvas.height = window.innerHeight;
     }
+    window.addEventListener('resize', resize);
+    resize();
 
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-
-    function createPoints(count) {
+    function createPoints(n) {
       points = [];
-      for (let i = 0; i < count; i++) {
+      for (let i = 0; i < n; i++) {
         points.push({
-          x: Math.random() * width,
-          y: Math.random() * height,
+          x: Math.random() * W,
+          y: Math.random() * H,
           vx: (Math.random() - 0.5) * 0.7,
           vy: (Math.random() - 0.5) * 0.7
         });
       }
     }
+    createPoints(90);
 
-    function drawWeb() {
-      ctx.clearRect(0, 0, width, height);
-
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
       for (let p of points) {
         p.x += p.vx;
         p.y += p.vy;
-
-        if (p.x < 0 || p.x > width) p.vx *= -1;
-        if (p.y < 0 || p.y > height) p.vy *= -1;
+        if (p.x < 0) p.x = W;
+        else if (p.x > W) p.x = 0;
+        if (p.y < 0) p.y = H;
+        else if (p.y > H) p.y = 0;
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, 1.5, 0, Math.PI * 2);
         ctx.fillStyle = '#00ffff';
         ctx.fill();
       }
-
+      // linhas entre partículas próximas
       for (let i = 0; i < points.length; i++) {
         for (let j = i + 1; j < points.length; j++) {
-          const dx = points[i].x - points[j].x;
-          const dy = points[i].y - points[j].y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-
-          if (distance < 120) {
+          let dx = points[i].x - points[j].x;
+          let dy = points[i].y - points[j].y;
+          let dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 120) {
             ctx.beginPath();
             ctx.moveTo(points[i].x, points[i].y);
             ctx.lineTo(points[j].x, points[j].y);
-            const alpha = 1 - distance / 120;
-            ctx.strokeStyle = `rgba(0, 255, 255, ${alpha * 0.3})`;
+            ctx.strokeStyle = `rgba(0,255,255,${1 - dist / 120})`;
             ctx.lineWidth = 0.7;
             ctx.stroke();
           }
         }
       }
-
-      requestAnimationFrame(drawWeb);
+      requestAnimationFrame(draw);
     }
+    draw();
 
-    createPoints(90);
-    drawWeb();
-
-    // Login simples (exemplo com usuário e senha fixos)
+    // Login simples fixo
+    const form = document.getElementById('login-form');
+    const errorMsg = document.getElementById('login-error');
     const loginScreen = document.getElementById('login-screen');
-    const app = document.getElementById('app');
-    const loginForm = document.getElementById('login-form');
-    const loginError = document.getElementById('login-error');
 
-    // Usuário e senha fixos para exemplo
-    const VALID_USERNAME = 'user';
-    const VALID_PASSWORD = '1234';
+    const VALID_USER = 'user';
+    const VALID_PASS = '1234';
 
-    loginForm.addEventListener('submit', (e) => {
+    form.addEventListener('submit', e => {
       e.preventDefault();
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value;
-
-      if (username === VALID_USERNAME && password === VALID_PASSWORD) {
-        // Login OK: esconder tela login, mostrar app
-        loginError.classList.add('hidden');
+      const user = form.username.value.trim();
+      const pass = form.password.value;
+      if(user === VALID_USER && pass === VALID_PASS){
+        errorMsg.style.display = 'none';
+        // Aqui a ação depois do login, por exemplo esconder a tela de login
         loginScreen.style.display = 'none';
-        app.classList.remove('hidden');
+        alert('Login realizado com sucesso! Agora carregue seu app...');
       } else {
-        loginError.textContent = 'Usuário ou senha inválidos.';
-        loginError.classList.remove('hidden');
+        errorMsg.style.display = 'block';
       }
     });
-
-    // Código do app original abaixo...
-
-    const playerContainer = document.getElementById('player-container');
-    const videoPlayer = document.getElementById('video-player');
-    const channelTitle = document.getElementById('channel-title');
-    const channelGrid = document.getElementById('channel-grid');
-    const searchInput = document.getElementById('search-input');
-    const loadingIndicator = document.getElementById('loading-indicator');
-    const noResultsMessage = document.getElementById('no-results');
-    const fullscreenBtn = document.getElementById('fullscreen-btn');
-
-    const API_URL = 'https://api-flixy-canais.vercel.app/all';
-    let allChannels = [];
-
-    function handleImageError(element, channelName) {
-      const fallback = document.createElement('div');
-      fallback.className = 'fallback-img';
-      fallback.textContent = channelName;
-      element.parentNode.replaceChild(fallback, element);
-    }
-
-    function playChannel(url, name) {
-      videoPlayer.src = url;
-      channelTitle.innerHTML = `Assistindo agora: <span class="text-indigo-400 font-bold">${name}</span>`;
-      playerContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-
-    async function loadChannels() {
-      try {
-        const response = await fetch(API_URL);
-        if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
-        const channels = await response.json();
-        allChannels = channels;
-        displayChannels(allChannels);
-        if (allChannels.length > 0) {
-          playChannel(allChannels[0].player_url, allChannels[0].nome);
-        }
-      } catch (error) {
-        console.error('Erro ao carregar canais:', error);
-        channelGrid.innerHTML = `<p class="text-red-500 col-span-full text-center">Erro ao carregar os canais. Tente novamente mais tarde.</p>`;
-      } finally {
-        loadingIndicator.classList.add('hidden');
-        channelGrid.classList.add('fade-in');
-      }
-    }
-
-    function displayChannels(channels) {
-      channelGrid.innerHTML = '';
-      noResultsMessage.classList.toggle('hidden', channels.length > 0);
-
-      channels.forEach((channel) => {
-        const card = document.createElement('div');
-        card.className =
-          'channel-card cursor-pointer bg-gray-900 rounded-xl overflow-hidden hover:ring-2 hover:ring-pink-500 transition-all shadow-lg hover:shadow-pink-500/30';
-        card.addEventListener('click', () => playChannel(channel.player_url, channel.nome));
-
-        const imageContainer = document.createElement('div');
-        imageContainer.className = 'aspect-w-4 aspect-h-3 bg-gray-800';
-
-        const img = document.createElement('img');
-        img.src = channel.capa;
-        img.alt = channel.nome;
-        img.className = 'w-full h-full object-contain p-3';
-        img.loading = 'lazy';
-        img.onerror = () => handleImageError(img, channel.nome);
-
-        imageContainer.appendChild(img);
-
-        const nameContainer = document.createElement('div');
-        nameContainer.className = 'p-2 text-center bg-gray-800';
-
-        const name = document.createElement('p');
-        name.className = 'font-semibold text-sm text-gray-200 truncate';
-        name.textContent = channel.nome;
-
-        nameContainer.appendChild(name);
-        card.appendChild(imageContainer);
-        card.appendChild(nameContainer);
-        channelGrid.appendChild(card);
-      });
-    }
-
-    function filterChannels() {
-      const query = searchInput.value.toLowerCase().trim();
-      const filtered = allChannels.filter((c) => c.nome.toLowerCase().includes(query));
-      displayChannels(filtered);
-    }
-
-    function toggleFullscreen() {
-      if (!document.fullscreenElement) {
-        playerContainer.requestFullscreen().catch((err) => {
-          alert(`Erro ao ativar tela cheia: ${err.message}`);
-        });
-      } else {
-        document.exitFullscreen();
-      }
-    }
-
-    searchInput.addEventListener('input', filterChannels);
-    fullscreenBtn.addEventListener('click', toggleFullscreen);
-    // Só carregar canais depois do login, para isso vamos mudar:
-    // loadChannels();
   </script>
-
-  <script>
-    // Após login, carregar os canais:
-    // Exemplo: monitorar visibilidade do app
-    const observer = new MutationObserver(() => {
-      if (!document.getElementById('app').classList.contains('hidden')) {
-        // app visível, carregar canais
-        if (!window.channelsLoaded) {
-          window.channelsLoaded = true;
-          loadChannels();
-        }
-      }
-    });
-    observer.observe(document.getElementById('app'), { attributes: true, attributeFilter: ['class'] });
-  </script>
-
 </body>
 </html>
