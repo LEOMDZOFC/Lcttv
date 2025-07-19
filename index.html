@@ -41,31 +41,50 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
-  <!-- Canvas das partículas -->
+  <!-- Partículas -->
   <canvas id="webCanvas"></canvas>
 
-  <header class="p-4 bg-gray-900 shadow-lg flex justify-between items-center">
-    <h1 class="text-2xl font-bold text-indigo-400">📺 LCT TV</h1>
-    <input id="search-input" type="text" placeholder="🔍 Buscar canal..." class="px-3 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+  <!-- Cabeçalho -->
+  <header class="p-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 shadow-xl flex justify-between items-center">
+    <h1 class="text-3xl font-extrabold text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
+      📺 LCT <span class="text-yellow-300 animate-pulse">TV</span>
+    </h1>
+    <input id="search-input" type="text" placeholder="🔍 Buscar canal..."
+      class="px-4 py-2 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-400 shadow-inner" />
   </header>
 
+  <!-- Conteúdo Principal -->
   <main class="flex-1 flex flex-col gap-4 p-4">
-    <section id="player-container" class="relative aspect-video max-w-5xl mx-auto bg-black rounded shadow overflow-hidden">
+    <section id="player-container"
+      class="relative aspect-video max-w-5xl mx-auto mt-4 bg-black rounded-xl shadow-2xl border-4 border-indigo-500/60 overflow-hidden transition-all duration-500">
       <iframe id="video-player" class="w-full h-full" src="" allowfullscreen frameborder="0"></iframe>
-      <button id="fullscreen-btn" class="absolute top-2 right-2 p-2 bg-gray-800/70 hover:bg-gray-700 rounded text-white text-sm">⛶ Tela Cheia</button>
+      <button id="fullscreen-btn"
+        class="absolute top-3 right-3 p-2 bg-indigo-700/80 hover:bg-indigo-600 text-white rounded-md shadow-md transition-transform hover:scale-110">
+        ⛶ Tela Cheia
+      </button>
     </section>
 
-    <p id="channel-title" class="text-center text-lg text-gray-300">Carregando canal...</p>
+    <p id="channel-title"
+      class="text-center text-xl mt-4 text-white font-semibold tracking-wide transition-all duration-300">
+      Carregando canal...
+    </p>
 
-    <div id="loading-indicator" class="text-center text-gray-400">🔄 Carregando canais...</div>
-    <div id="no-results" class="hidden text-center text-red-500">Nenhum canal encontrado.</div>
+    <div id="loading-indicator"
+      class="text-center text-gray-400 font-medium mt-2 animate-pulse">🔄 Carregando canais...</div>
 
-    <div id="channel-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 fade-in"></div>
+    <div id="no-results" class="hidden text-center text-red-500 font-bold mt-2">Nenhum canal encontrado.</div>
+
+    <div id="channel-grid"
+      class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 fade-in p-2">
+    </div>
   </main>
 
-  <footer class="p-4 text-center text-sm text-gray-500 bg-gray-900">LCT TV © 2025 - Todos os direitos reservados.</footer>
+  <!-- Rodapé -->
+  <footer class="p-4 text-center text-sm text-gray-300 bg-gray-900 border-t border-gray-700 mt-auto">
+    LCT TV © 2025 — Todos os direitos reservados
+  </footer>
 
-  <!-- Script funcional do site -->
+  <!-- JavaScript principal -->
   <script>
     const playerContainer = document.getElementById('player-container');
     const videoPlayer = document.getElementById('video-player');
@@ -117,7 +136,7 @@
 
       channels.forEach(channel => {
         const card = document.createElement('div');
-        card.className = 'channel-card cursor-pointer bg-gray-900 rounded-lg overflow-hidden hover:ring-2 hover:ring-indigo-500 transition';
+        card.className = 'channel-card cursor-pointer bg-gray-900 rounded-xl overflow-hidden hover:ring-2 hover:ring-pink-500 transition-all shadow-lg hover:shadow-pink-500/30';
         card.addEventListener('click', () => playChannel(channel.player_url, channel.nome));
 
         const imageContainer = document.createElement('div');
@@ -167,7 +186,7 @@
     loadChannels();
   </script>
 
-  <!-- Script das partículas -->
+  <!-- Partículas -->
   <script>
     const canvas = document.getElementById('webCanvas');
     const ctx = canvas.getContext('2d');
@@ -235,5 +254,6 @@
     createPoints(90);
     drawWeb();
   </script>
+
 </body>
 </html>
