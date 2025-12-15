@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>TXT para estoque.json</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #020617;
+            color: #e5e7eb;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .box {
+            background: #020617;
+            border: 1px solid #1e293b;
+            padding: 20px;
+            border-radius: 10px;
+            width: 420px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.6);
+        }
+
+        input, button {
+            width: 100%;
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 6px;
+            border: none;
+        }
+
+        button {
+            background: #22c55e;
+            color: #022c22;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #16a34a;
+        }
+
+        pre {
+            background: #020617;
+            border: 1px solid #1e293b;
+            padding: 10px;
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 13px;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h2>Upload TXT → estoque.json</h2>
+
+    <input type="file" id="fileInput" accept=".txt">
+    <button onclick="converter()">Converter e Baixar</button>
+
+    <pre id="log">Aguardando arquivo...</pre>
+</div>
+
+<script>
+function converter() {
+    const input = document.getElementById("fileInput");
+    const log = document.getElementById("log");
+
+    if (!input.files.length) {
+        alert("Selecione um arquivo .txt");
+        return;
+    }
+
+    const file = input.files[0];
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+        const linhas = e.target.result.split(/\r?\n/);
+        const estoque = [];
+
+        linhas.forEach((linha, index) => {
+            linha = linha.trim();
+            if (!linha) return;
+
+            const partes = linha.split(":");
+            if (partes.length === 2) {
+                estoque.push({
+                    usuario: partes[0],
+                    senha: partes[1]
+                });
+            }
+        });
+
+        if (!estoque.length) {
+            log.textContent = "Nenhuma conta válida encontrada.";
+            return;
+        }
+
+        const json = JSON.stringify(estoque, null, 4);
+        baixarJSON(json);
+        log.textContent = `✔ ${estoque.length} contas salvas em estoque.json`;
+    };
+
+    reader.readAsText(file);
+}
+
+function baixarJSON(conteudo) {
+    const blob = new Blob([conteudo], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "estoque.json";
+    a.click();
+
+    URL.revokeObjectURL(url);
+}
+</script>
+
+</body>
+</html>
